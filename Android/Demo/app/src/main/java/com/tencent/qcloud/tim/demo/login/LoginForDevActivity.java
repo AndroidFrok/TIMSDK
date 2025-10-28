@@ -1,5 +1,6 @@
 package com.tencent.qcloud.tim.demo.login;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +19,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.tencent.qcloud.tim.demo.R;
@@ -120,7 +120,7 @@ public class LoginForDevActivity extends BaseLightActivity {
                                     public void run() {
 
 
-                                        AlertDialog dialog = new AlertDialog.Builder(getBaseContext())
+                                        android.app.AlertDialog dialog = new AlertDialog.Builder(LoginForDevActivity.this)
                                                 .setTitle("Failed").setMessage(", errCode = " + code + ", errInfo = " + desc)
                                                 .setPositiveButton("OK", null).create();
                                         dialog.show();

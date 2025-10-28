@@ -61,7 +61,7 @@ public class GenerateTestUserSig {
      * Note: this method is for testing only. Before commercial launch, please migrate the UserSig calculation code and key to your backend server to prevent key disclosure and traffic stealing.
      * Reference: https://intl.cloud.tencent.com/document/product/1047/34385
      */
-    private static final String SECRETKEY = "";
+    private static final String SECRETKEY = "c8309a16922b0ed950a8497c360d0b053a036443f7206e0ff70970f61d8a5726";
 
     /**
      * Calculate UserSig
