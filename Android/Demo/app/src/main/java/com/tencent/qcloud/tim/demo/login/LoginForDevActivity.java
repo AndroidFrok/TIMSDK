@@ -16,8 +16,11 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.tencent.qcloud.tim.demo.R;
 import com.tencent.qcloud.tim.demo.TIMAppService;
 import com.tencent.qcloud.tim.demo.bean.UserInfo;
@@ -34,7 +37,6 @@ import com.tencent.qcloud.tuicore.util.ToastUtil;
 import com.tencent.qcloud.tuikit.timcommon.component.activities.BaseLightActivity;
 
 /**
- *
  * Login Activity
  * The username can be any non-blank character, but the premise is to modify the SDKAPPID and PRIVATEKEY in the code according to the following documents:
  * https://github.com/tencentyun/TIMSDK/tree/master/Android
@@ -111,46 +113,56 @@ public class LoginForDevActivity extends BaseLightActivity {
                 final String userID = mUserAccount.getText().toString();
                 final String userSig = GenerateTestUserSig.genTestUserSig(mUserAccount.getText().toString());
                 LoginWrapper.getInstance().loginIMSDK(
-                    LoginForDevActivity.this, AppConfig.DEMO_SDK_APPID, userID, userSig, TUIUtils.getLoginConfig(), new TUICallback() {
-                        @Override
-                        public void onError(final int code, final String desc) {
-                            runOnUiThread(new Runnable() {
-                                public void run() {
-                                    ToastUtil.toastLongMessage(getString(R.string.failed_login_tip) + ", errCode = " + code + ", errInfo = " + desc);
-                                    mLoginView.setEnabled(true);
-                                }
-                            });
-                            DemoLog.i(TAG, "imLogin errorCode = " + code + ", errorInfo = " + desc);
-                        }
+                        LoginForDevActivity.this, AppConfig.DEMO_SDK_APPID, userID, userSig, TUIUtils.getLoginConfig(), new TUICallback() {
+                            @Override
+                            public void onError(final int code, final String desc) {
+                                runOnUiThread(new Runnable() {
+                                    public void run() {
 
-                        @Override
-                        public void onSuccess() {
-                            UserInfo.getInstance().setUserId(userID);
-                            UserInfo.getInstance().setUserSig(userSig);
-                            UserInfo.getInstance().setAutoLogin(true);
-                            UserInfo.getInstance().setDebugLogin(true);
-                            Intent intent;
-                            if (AppConfig.DEMO_UI_STYLE == AppConfig.DEMO_UI_STYLE_CLASSIC) {
-                                intent = new Intent(LoginForDevActivity.this, MainActivity.class);
-                            } else {
-                                intent = new Intent(LoginForDevActivity.this, MainMinimalistActivity.class);
+
+                                        AlertDialog dialog = new AlertDialog.Builder(getBaseContext())
+                                                .setTitle("Failed").setMessage(", errCode = " + code + ", errInfo = " + desc)
+                                                .setPositiveButton("OK", null).create();
+                                        dialog.show();
+
+
+//                                    ToastUtil.toastLongMessage(getString(R.string.failed_login_tip) + ", errCode = " + code + ", errInfo = " + desc);
+                                        mLoginView.setEnabled(true);
+                                    }
+                                });
+                                DemoLog.i(TAG, "imLogin errorCode = " + code + ", errorInfo = " + desc);
                             }
-                            startActivity(intent);
 
-                            TIMAppService.getInstance().registerPushManually();
+                            @Override
+                            public void onSuccess() {
+                                UserInfo.getInstance().setUserId(userID);
+                                UserInfo.getInstance().setUserSig(userSig);
+                                UserInfo.getInstance().setAutoLogin(true);
+                                UserInfo.getInstance().setDebugLogin(true);
+                                Intent intent;
+                                if (AppConfig.DEMO_UI_STYLE == AppConfig.DEMO_UI_STYLE_CLASSIC) {
+                                    intent = new Intent(LoginForDevActivity.this, MainActivity.class);
+                                } else {
+                                    intent = new Intent(LoginForDevActivity.this, MainMinimalistActivity.class);
+                                }
+                                startActivity(intent);
 
-                            finish();
-                        }
-                    });
+                                TIMAppService.getInstance().registerPushManually();
+
+                                finish();
+                            }
+                        });
             }
         });
 
         mUserAccount.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {

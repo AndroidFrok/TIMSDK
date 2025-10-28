@@ -7,10 +7,17 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.text.TextUtils;
 import android.util.Log;
+
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.multidex.MultiDexApplication;
+
 import com.tencent.bugly.crashreport.CrashReport;
+import com.tencent.imsdk.v2.V2TIMLogListener;
+import com.tencent.imsdk.v2.V2TIMManager;
+import com.tencent.imsdk.v2.V2TIMSDKConfig;
+import com.tencent.imsdk.v2.V2TIMSDKListener;
 import com.tencent.qcloud.tim.demo.config.AppConfig;
+import com.tencent.qcloud.tim.demo.signature.GenerateTestUserSig;
 import com.tencent.qcloud.tim.demo.utils.BrandUtil;
 import com.tencent.qcloud.tim.demo.utils.Constants;
 import com.tencent.qcloud.tim.demo.utils.PrivateConstants;
@@ -20,7 +27,10 @@ import com.tencent.qcloud.tuicore.TUICore;
 import com.tencent.qcloud.tuicore.TUIThemeManager;
 import com.tencent.qcloud.tuicore.interfaces.ITUINotification;
 import com.tencent.qcloud.tuicore.interfaces.ITUIObjectFactory;
+import com.tencent.qcloud.tuicore.util.ToastUtil;
 import com.tencent.qcloud.tuikit.timcommon.util.TUIUtil;
+import com.tencent.qcloud.tuikit.tuicallkit.manager.hybird.CallBridge;
+
 import java.lang.reflect.Field;
 import java.util.Map;
 
@@ -45,12 +55,12 @@ public class DemoApplication extends MultiDexApplication {
         super.attachBaseContext(base);
         // add language changed listener
         TUICore.registerEvent(
-            TUIConstants.TUICore.LANGUAGE_EVENT, TUIConstants.TUICore.LANGUAGE_EVENT_SUB_KEY, new ITUINotification() {
-                @Override
-                public void onNotifyEvent(String key, String subKey, Map<String, Object> param) {
-                    TUIThemeManager.setWebViewLanguage(base);
-                }
-            });
+                TUIConstants.TUICore.LANGUAGE_EVENT, TUIConstants.TUICore.LANGUAGE_EVENT_SUB_KEY, new ITUINotification() {
+                    @Override
+                    public void onNotifyEvent(String key, String subKey, Map<String, Object> param) {
+                        TUIThemeManager.setWebViewLanguage(base);
+                    }
+                });
     }
 
     private void registerLanguageChangedReceiver() {
@@ -87,13 +97,13 @@ public class DemoApplication extends MultiDexApplication {
                         objectName, TUIConstants.Privacy.PermissionsFactory.PermissionsName.CAMERA_PERMISSIONS)) {
                     return cameraReason;
                 } else if (TextUtils.equals(objectName,
-                               TUIConstants.Privacy.PermissionsFactory.PermissionsName.MICROPHONE_PERMISSIONS)) {
+                        TUIConstants.Privacy.PermissionsFactory.PermissionsName.MICROPHONE_PERMISSIONS)) {
                     return micReason;
                 } else if (TextUtils.equals(objectName,
-                               TUIConstants.Privacy.PermissionsFactory.PermissionsName.CAMERA_PERMISSIONS_TIP)) {
+                        TUIConstants.Privacy.PermissionsFactory.PermissionsName.CAMERA_PERMISSIONS_TIP)) {
                     return cameraDeniedAlert;
                 } else if (TextUtils.equals(objectName,
-                               TUIConstants.Privacy.PermissionsFactory.PermissionsName.MICROPHONE_PERMISSIONS_TIP)) {
+                        TUIConstants.Privacy.PermissionsFactory.PermissionsName.MICROPHONE_PERMISSIONS_TIP)) {
                     return micDeniedAlert;
                 }
                 return null;
@@ -103,15 +113,15 @@ public class DemoApplication extends MultiDexApplication {
 
     private void initBugly() {
         TUICore.registerEvent(TUIConstants.TUILogin.EVENT_IMSDK_INIT_STATE_CHANGED,
-            TUIConstants.TUILogin.EVENT_SUB_KEY_START_INIT, new ITUINotification() {
-                @Override
-                public void onNotifyEvent(String key, String subKey, Map<String, Object> param) {
-                    CrashReport.UserStrategy strategy = new CrashReport.UserStrategy(getApplicationContext());
-                    strategy.setAppVersion(BuildConfig.VERSION_NAME);
-                    strategy.setDeviceModel(BrandUtil.getBuildModel());
-                    CrashReport.initCrashReport(getApplicationContext(), PrivateConstants.BUGLY_APPID, true, strategy);
-                }
-            });
+                TUIConstants.TUILogin.EVENT_SUB_KEY_START_INIT, new ITUINotification() {
+                    @Override
+                    public void onNotifyEvent(String key, String subKey, Map<String, Object> param) {
+                        CrashReport.UserStrategy strategy = new CrashReport.UserStrategy(getApplicationContext());
+                        strategy.setAppVersion(BuildConfig.VERSION_NAME);
+                        strategy.setDeviceModel(BrandUtil.getBuildModel());
+                        CrashReport.initCrashReport(getApplicationContext(), PrivateConstants.BUGLY_APPID, true, strategy);
+                    }
+                });
     }
 
     private void initIMDemoAppInfo() {
@@ -122,6 +132,7 @@ public class DemoApplication extends MultiDexApplication {
         } catch (NoSuchFieldException | IllegalAccessException | ClassCastException e) {
             // ignore
         }
+        initTIM();
     }
 
     private boolean isMainProcess() {
@@ -132,5 +143,36 @@ public class DemoApplication extends MultiDexApplication {
         } else {
             return false;
         }
+    }
+
+    private void initTIM() {
+        // 初始化 config 对象
+        V2TIMSDKConfig config = new V2TIMSDKConfig();
+// 指定 log 输出级别
+        config.setLogLevel(V2TIMSDKConfig.V2TIM_LOG_INFO);
+// 指定 log 监听器
+        config.setLogListener(new V2TIMLogListener() {
+            @Override
+            public void onLog(int logLevel, String logContent) {
+                // logContent 为 SDK 日志内容
+            }
+        });
+        V2TIMManager.getInstance().addIMSDKListener(new V2TIMSDKListener() {
+
+            @Override
+            public void onConnectFailed(int code, String error) {
+                super.onConnectFailed(code, error);
+                ToastUtil.toastLongMessage(code + "-" + error);
+//                Log.tag("tim").w(code + " onConnectFailed" + error);
+            }
+
+            @Override
+            public void onConnectSuccess() {
+                super.onConnectSuccess();
+//                Timber.tag("tim").d(" onConnectSuccess");
+                ToastUtil.toastShortMessage("onConnectSuccess");
+            }
+        });
+        V2TIMManager.getInstance().initSDK(this, GenerateTestUserSig.SDKAPPID, config);
     }
 }

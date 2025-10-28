@@ -1,5 +1,6 @@
 package com.tencent.qcloud.tim.demo.config;
 
+import com.tencent.qcloud.tim.demo.signature.GenerateTestUserSig;
 import com.tencent.qcloud.tim.demo.utils.Constants;
 
 public class AppConfig {
@@ -13,7 +14,7 @@ public class AppConfig {
     // long connection addr: china、india ...
     public static int DEMO_TEST_ENVIRONMENT = 0;
     // logined appid
-    public static int DEMO_SDK_APPID = 0;
+    public static int DEMO_SDK_APPID = GenerateTestUserSig.SDKAPPID;
     public static final String RT_CUBE_PACKAGE_NAME = "com.tencent.trtc";
     public static final String TENCENT_RTC_PACKAGE_NAME = "com.tencent.rtc.app";
 }
